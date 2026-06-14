@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cockpit – Entwicklung Alzinger</title>
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png" />
+  <link rel="icon" type="image/png" sizes="16x16" href="assets/favicon-16.png" />
+  <link rel="apple-touch-icon" href="assets/apple-touch-icon.png" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <meta name="theme-color" content="#d1071a" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="Entwicklung" />
+  <link rel="stylesheet" href="css/styles.css?v=1" />
+</head>
+<body>
+  <header class="appbar">
+    <div class="brand">
+      <span id="logo"></span>
+      <div class="titles">
+        <div class="sub">Entwicklung · Cockpit</div>
+      </div>
+    </div>
+    <div class="right">
+      <span class="ver" id="appVer"></span>
+      <span class="who" id="who"></span>
+      <button class="btn-ghost-light" onclick="DB.logout()">Abmelden</button>
+    </div>
+  </header>
+
+  <div class="nav">
+    <a class="pill" href="erfassung.html">← Zeiterfassung</a>
+    <button class="pill active" data-page="overview">Übersicht</button>
+    <button class="pill" data-page="report">Auswertung</button>
+    <button class="pill" data-page="entries">Zeiteinträge</button>
+    <button class="pill" data-page="entwickler">Entwickler</button>
+    <button class="pill" data-page="master">Projekte &amp; Kacheln</button>
+    <button class="pill" data-page="settings">Einstellungen</button>
+  </div>
+
+  <div class="wrap">
+    <section class="page active" id="page-overview">
+      <h1 class="greet">Servus, <span id="firstName">Entwicklung</span>!</h1>
+      <p class="greet-sub">Dein Entwicklungs-Cockpit</p>
+      <div class="stats" id="stats"></div>
+      <div class="section-title">Gerade in Arbeit</div>
+      <div class="card"><div id="liveList"></div></div>
+    </section>
+
+    <section class="page" id="page-report">
+      <div class="print-head print-only"></div>
+      <h1 class="greet">Auswertung</h1>
+      <p class="greet-sub">Welche Kachel hat wie lange gedauert – und wer hat daran gearbeitet. Pausenzeiten sind automatisch abgezogen.</p>
+      <div class="card no-print" style="margin-bottom:16px">
+        <div class="row">
+          <label class="field" style="margin:0"><span class="lab">Von</span><input type="date" id="rFrom" /></label>
+          <label class="field" style="margin:0"><span class="lab">Bis</span><input type="date" id="rTo" /></label>
+          <label class="field" style="margin:0"><span class="lab">Projekt</span><select id="rProjekt"><option value="">Alle</option></select></label>
+          <button class="btn" onclick="loadReport()">Anwenden</button>
+          <button class="btn gray" onclick="printReport()">🖨 Drucken / PDF</button>
+        </div>
+      </div>
+      <div class="stats" id="reportTotals"></div>
+      <div class="section-title">Nach Kachel</div>
+      <div class="card"><div id="reportKachel"></div></div>
+      <div class="section-title">Nach Entwickler</div>
+      <div class="card"><div id="reportEntwickler"></div></div>
+
+      <div class="section-title">Kacheln je Projekt</div>
+      <div id="reportByProjekt"></div>
+
+      <div class="section-title">Stunden je Entwickler (Soll / Ist je Tag)</div>
+      <div id="reportHours"></div>
+
+      <div class="section-title">Feiertage Bayern (Betrieb geschlossen)</div>
+      <div id="reportHolidays"></div>
+    </section>
+
+    <section class="page" id="page-entries">
+      <h1 class="greet">Zeiteinträge</h1>
+      <p class="greet-sub">Einzelne Buchungen ansehen, korrigieren oder löschen. Die Dauer ist netto (ohne Pausen).</p>
+      <div class="card" style="margin-bottom:16px">
+        <div class="row">
+          <label class="field" style="margin:0"><span class="lab">Von</span><input type="date" id="eFrom" /></label>
+          <label class="field" style="margin:0"><span class="lab">Bis</span><input type="date" id="eTo" /></label>
+          <label class="field" style="margin:0"><span class="lab">Projekt</span><select id="eProjekt"><option value="">Alle</option></select></label>
+          <label class="field" style="margin:0"><span class="lab">Entwickler</span><select id="eEntwickler"><option value="">Alle</option></select></label>
+          <button class="btn" onclick="loadEntries()">Anwenden</button>
+        </div>
+      </div>
+      <div class="card"><div id="entriesTable"></div></div>
+    </section>
+
+    <section class="page" id="page-entwickler">
+      <h1 class="greet">Entwickler</h1>
+      <p class="greet-sub">Alle Entwickler verwalten.</p>
+      <div class="card" style="margin-bottom:16px">
+        <div class="row">
+          <label class="field" style="margin:0;flex:3"><span class="lab">Name</span><input id="empName" placeholder="Vor- und Nachname" /></label>
+          <button class="btn" onclick="addEntwickler()">Hinzufügen</button>
+        </div>
+      </div>
+      <div class="card"><div id="empList"></div></div>
+    </section>
+
+    <section class="page" id="page-master">
+      <h1 class="greet">Projekte &amp; Kacheln</h1>
+      <p class="greet-sub">Stammdaten der Entwicklung.</p>
+      <div class="section-title">Projekte</div>
+      <div class="card" style="margin-bottom:16px">
+        <div class="row">
+          <label class="field" style="margin:0;flex:3"><span class="lab">Neues Projekt</span><input id="projektName" placeholder="z. B. Lepton 5100" /></label>
+          <button class="btn" onclick="addProjekt()">Hinzufügen</button>
+        </div>
+      </div>
+      <div class="card" style="margin-bottom:8px"><div id="projektList"></div></div>
+      <div class="section-title">Kacheln</div>
+      <div class="card" style="margin-bottom:16px">
+        <div class="row">
+          <label class="field" style="margin:0"><span class="lab">Artikelnummer</span><input id="kachelArt" placeholder="z. B. 5001173" /></label>
+          <label class="field" style="margin:0;flex:3"><span class="lab">Bezeichnung</span><input id="kachelName" placeholder="z. B. Steuerung Hauptplatine" /></label>
+          <label class="field" style="margin:0"><span class="lab">Projekt</span><select id="kachelProjekt"><option value="">Allgemein (alle Projekte)</option></select></label>
+          <button class="btn" onclick="addKachel()">Hinzufügen</button>
+        </div>
+        <p class="muted" style="margin:8px 2px 0;font-size:12.5px">„Allgemein" = erscheint bei allen Projekten. Wird ein Projekt gewählt, ist die Kachel nur dort sichtbar. Sobald ein Projekt eigene Kacheln hat, werden bei ihm <b>nur</b> diese gezeigt.</p>
+      </div>
+      <div class="card"><div id="kachelList"></div></div>
+    </section>
+
+    <section class="page" id="page-settings">
+      <h1 class="greet">Einstellungen</h1>
+      <p class="greet-sub">Daten sichern und übertragen.</p>
+      <div class="section-title">Daten</div>
+      <div class="card" style="max-width:620px">
+        <div id="dataBox">
+          <p class="muted" style="margin-top:0;font-size:13px">Im lokalen Modus liegen die Daten nur in diesem Browser.
+            Zum Sichern oder Übertragen kannst du die Daten exportieren und importieren.</p>
+          <div class="flex" style="flex-wrap:wrap">
+            <button class="btn gray" onclick="exportData()">Daten exportieren</button>
+            <button class="btn gray" onclick="document.getElementById('importFile').click()">Daten importieren</button>
+            <input type="file" id="importFile" accept="application/json" style="display:none" onchange="importData(this)" />
+            <button class="btn danger" onclick="resetData()">Alle Daten zurücksetzen</button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <div class="modal-bg" id="entryModal">
+    <div class="modal">
+      <h3>Zeiteintrag bearbeiten</h3>
+      <div id="entryMeta" class="muted" style="margin-bottom:14px;font-size:13px"></div>
+      <label class="field"><span class="lab">Beginn</span><input type="datetime-local" id="editStart" /></label>
+      <label class="field"><span class="lab">Ende (leer = läuft noch)</span><input type="datetime-local" id="editEnd" /></label>
+      <label class="field"><span class="lab">Notiz</span><input id="editNote" /></label>
+      <div class="actions">
+        <button class="btn gray" onclick="closeEntryModal()">Abbrechen</button>
+        <button class="btn" onclick="saveEntry()">Speichern</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="printArea"></div>
+
+  <footer class="app-footer">ALZINGER Entwicklung · <span id="footVer"></span></footer>
+
+  <script src="js/common.js?v=1"></script>
+  <script src="js/store.js?v=1"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/config.js?v=1"></script>
+  <script src="js/db.js?v=1"></script>
+  <script src="js/cockpit.js?v=1"></script>
+</body>
+</html>

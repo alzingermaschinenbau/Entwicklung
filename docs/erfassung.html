@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Zeiterfassung – Entwicklung Alzinger</title>
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png" />
+  <link rel="icon" type="image/png" sizes="16x16" href="assets/favicon-16.png" />
+  <link rel="apple-touch-icon" href="assets/apple-touch-icon.png" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <meta name="theme-color" content="#d1071a" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="Entwicklung" />
+  <link rel="stylesheet" href="css/styles.css?v=1" />
+</head>
+<body>
+  <header class="appbar">
+    <div class="brand">
+      <span id="logo"></span>
+      <div class="titles">
+        <div class="sub">Entwicklung</div>
+      </div>
+    </div>
+    <div class="right">
+      <span class="ver" id="appVer"></span>
+      <span class="who" id="who"></span>
+      <button class="btn-ghost-light" onclick="DB.logout()">Abmelden</button>
+    </div>
+  </header>
+
+  <div class="nav">
+    <button class="pill active" data-page="board">Zeiterfassung</button>
+    <a class="pill" href="cockpit.html">Cockpit / Auswertung →</a>
+  </div>
+
+  <div class="wrap">
+    <section class="page active" id="page-board">
+      <h1 class="greet">Zeiterfassung</h1>
+      <p class="greet-sub">Projekt und Kachel wählen, dann starten. Beim Fertigstellen beenden. Pausen werden automatisch abgezogen.</p>
+      <div class="machine-tabs" id="projektTabs"></div>
+      <div class="bg-grid" id="kachelGrid"></div>
+    </section>
+  </div>
+
+  <div class="modal-bg" id="startModal">
+    <div class="modal">
+      <h3 id="startTitle">Arbeit starten</h3>
+      <label class="field">
+        <span class="lab">Entwickler</span>
+        <select id="startEntwickler"></select>
+      </label>
+      <div class="actions">
+        <button class="btn gray" onclick="closeStart()">Abbrechen</button>
+        <button class="btn green" onclick="confirmStart()">Starten</button>
+      </div>
+    </div>
+  </div>
+
+  <footer class="app-footer">ALZINGER Entwicklung · <span id="footVer"></span></footer>
+
+  <script src="js/common.js?v=1"></script>
+  <script src="js/store.js?v=1"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/config.js?v=1"></script>
+  <script src="js/db.js?v=1"></script>
+  <script src="js/erfassung.js?v=1"></script>
+</body>
+</html>
