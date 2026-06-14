@@ -11,6 +11,6 @@
 //   - Project API keys: anon public  -> SUPABASE_ANON_KEY
 // ------------------------------------------------------------------
 window.ENTWICKLUNG_CONFIG = {
-  SUPABASE_URL: '',
-  SUPABASE_ANON_KEY: '',
+  SUPABASE_URL: 'https://eescelcasqurtimiuory.supabase.co',
+  SUPABASE_ANON_KEY: 'sb_publishable_tm3CHGZY1f4hKbsHMBmwIA_GtYTfSYI',
 };
