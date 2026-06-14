@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Anmelden – Entwicklung Alzinger</title>
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png" />
+  <link rel="icon" type="image/png" sizes="16x16" href="assets/favicon-16.png" />
+  <link rel="apple-touch-icon" href="assets/apple-touch-icon.png" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <meta name="theme-color" content="#d1071a" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="Entwicklung" />
+  <link rel="stylesheet" href="css/styles.css?v=1" />
+</head>
+<body>
+  <div class="login-wrap">
+    <div class="login-card">
+      <div class="login-logo">
+        <img class="login-logo-img" src="assets/alzinger-logo.png" alt="ALZINGER" />
+      </div>
+      <div class="login-sub">Entwicklung &amp; Zeiterfassung</div>
+      <div class="login-err" id="err"></div>
+      <form id="form">
+        <label class="field">
+          <span class="lab">Benutzer</span>
+          <input id="username" autocomplete="username" autofocus />
+        </label>
+        <label class="field">
+          <span class="lab">Passwort</span>
+          <input id="password" type="password" autocomplete="current-password" />
+        </label>
+        <button class="btn" type="submit">Anmelden</button>
+      </form>
+      <div class="login-ver" id="loginVer"></div>
+    </div>
+  </div>
+  <script src="js/common.js?v=1"></script>
+  <script src="js/store.js?v=1"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/config.js?v=1"></script>
+  <script src="js/db.js?v=1"></script>
+  <script>
+    const form = document.getElementById('form');
+    const err = document.getElementById('err');
+    document.getElementById('loginVer').textContent = APP_VERSION;
+
+    (async () => {
+      await DB.init();
+      const existing = DB.session();
+      if (existing) window.location.href = 'erfassung.html';
+    })();
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      err.classList.remove('show');
+      try {
+        const sess = await DB.login(
+          document.getElementById('username').value,
+          document.getElementById('password').value
+        );
+        if (sess) window.location.href = 'erfassung.html';
+        else { err.textContent = 'Anmeldung fehlgeschlagen'; err.classList.add('show'); }
+      } catch (e2) {
+        err.textContent = 'Anmeldung fehlgeschlagen'; err.classList.add('show');
+      }
+    });
+  </script>
+</body>
+</html>

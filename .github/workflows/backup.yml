@@ -1,0 +1,81 @@
+name: Taegliche Datensicherung
+
+# Sichert die Supabase-Daten taeglich um 23:00 (Europe/Berlin) als JSON-Artifact.
+# GitHub-Cron laeuft in UTC; durch zwei Zeiten + Zeitzonen-Pruefung wird die
+# Sicherung sommers wie winters genau um 23:00 Ortszeit ausgefuehrt.
+on:
+  schedule:
+    - cron: '0 21 * * *'   # 23:00 Europe/Berlin (Sommerzeit, UTC+2)
+    - cron: '0 22 * * *'   # 23:00 Europe/Berlin (Winterzeit, UTC+1)
+  workflow_dispatch: {}     # zusaetzlich jederzeit manuell ausloesbar
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Nur um 23:00 Europe/Berlin fortfahren
+        id: gate
+        run: |
+          H=$(TZ=Europe/Berlin date +%H)
+          echo "Lokale Stunde (Europe/Berlin): $H"
+          echo "date=$(TZ=Europe/Berlin date +%F)" >> "$GITHUB_OUTPUT"
+          if [ "${{ github.event_name }}" != "workflow_dispatch" ] && [ "$H" != "23" ]; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            echo "Nicht 23 Uhr Ortszeit - Sicherung wird uebersprungen."
+          fi
+
+      - name: Supabase-Tabellen als JSON exportieren
+        if: steps.gate.outputs.skip != 'true'
+        env:
+          # In den Repo-Einstellungen hinterlegen:
+          #   Variable  SUPABASE_URL  (Settings -> Secrets and variables -> Actions -> Variables)
+          #   Secret    SUPABASE_KEY  (anon public key oder Service-Key)
+          SUPABASE_URL: ${{ vars.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+        run: |
+          set -euo pipefail
+          if [ -z "${SUPABASE_URL:-}" ] || [ -z "${SUPABASE_KEY:-}" ]; then
+            echo "SUPABASE_URL (Variable) oder SUPABASE_KEY (Secret) fehlt - Sicherung uebersprungen."
+            echo "Bitte in den Repo-Einstellungen hinterlegen."
+            exit 0
+          fi
+          BASE="$SUPABASE_URL/rest/v1"
+          mkdir -p backup
+
+          dump_table() {
+            local table="$1"; local order="${2:-}"
+            local out="backup/${table}.json"
+            local offset=0 page=1000 n=0
+            local tmp; tmp=$(mktemp -d)
+            while :; do
+              local end=$((offset + page - 1))
+              curl -sS --fail "${BASE}/${table}?select=*${order}" \
+                -H "apikey: ${SUPABASE_KEY}" -H "Authorization: Bearer ${SUPABASE_KEY}" \
+                -H "Range-Unit: items" -H "Range: ${offset}-${end}" \
+                -o "${tmp}/p_${n}.json"
+              local count; count=$(jq 'length' "${tmp}/p_${n}.json")
+              echo "  ${table}: Seite $((n + 1)) -> ${count} Zeilen"
+              n=$((n + 1))
+              if [ "$count" -lt "$page" ]; then break; fi
+              offset=$((offset + page))
+            done
+            jq -s 'add' "${tmp}"/p_*.json > "$out"
+            rm -rf "$tmp"
+          }
+
+          dump_table entwickler
+          dump_table projekte "&order=sort"
+          dump_table kacheln "&order=sort"
+          dump_table time_entries "&order=id"
+          dump_table settings
+
+          date -u +"%Y-%m-%dT%H:%M:%SZ" > backup/_stand_utc.txt
+          echo "Sicherung erstellt:"; ls -la backup
+
+      - name: Backup als Artifact hochladen
+        if: steps.gate.outputs.skip != 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: entwicklung-backup-${{ steps.gate.outputs.date }}
+          path: backup/
+          retention-days: 90
