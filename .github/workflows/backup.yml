@@ -27,19 +27,18 @@ jobs:
       - name: Supabase-Tabellen als JSON exportieren
         if: steps.gate.outputs.skip != 'true'
         env:
-          # In den Repo-Einstellungen hinterlegen:
-          #   Variable  SUPABASE_URL  (Settings -> Secrets and variables -> Actions -> Variables)
-          #   Secret    SUPABASE_KEY  (anon public key oder Service-Key)
+          # Standardmaessig laeuft die Sicherung ohne weitere Konfiguration.
+          # Optional ueberschreibbar ueber Repo-Variable SUPABASE_URL und
+          # Repo-Secret SUPABASE_KEY (z. B. um einen Service-Key zu nutzen).
           SUPABASE_URL: ${{ vars.SUPABASE_URL }}
           SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
         run: |
           set -euo pipefail
-          if [ -z "${SUPABASE_URL:-}" ] || [ -z "${SUPABASE_KEY:-}" ]; then
-            echo "SUPABASE_URL (Variable) oder SUPABASE_KEY (Secret) fehlt - Sicherung uebersprungen."
-            echo "Bitte in den Repo-Einstellungen hinterlegen."
-            exit 0
-          fi
-          BASE="$SUPABASE_URL/rest/v1"
+          URL="${SUPABASE_URL:-}"
+          if [ -z "$URL" ]; then URL="https://eescelcasqurtimiuory.supabase.co"; fi
+          KEY="${SUPABASE_KEY:-}"
+          if [ -z "$KEY" ]; then KEY="sb_publishable_tm3CHGZY1f4hKbsHMBmwIA_GtYTfSYI"; fi
+          BASE="$URL/rest/v1"
           mkdir -p backup
 
           dump_table() {
@@ -50,7 +49,7 @@ jobs:
             while :; do
               local end=$((offset + page - 1))
               curl -sS --fail "${BASE}/${table}?select=*${order}" \
-                -H "apikey: ${SUPABASE_KEY}" -H "Authorization: Bearer ${SUPABASE_KEY}" \
+                -H "apikey: ${KEY}" -H "Authorization: Bearer ${KEY}" \
                 -H "Range-Unit: items" -H "Range: ${offset}-${end}" \
                 -o "${tmp}/p_${n}.json"
               local count; count=$(jq 'length' "${tmp}/p_${n}.json")
