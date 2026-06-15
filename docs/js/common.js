@@ -182,4 +182,4 @@ function toast(msg) {
 const ALZINGER_LOGO = `<img class="brand-logo" src="assets/alzinger-logo-white.png" alt="ALZINGER" />`;
 
 // App-Version (zentral) – wird im Header und auf der Login-Seite angezeigt
-const APP_VERSION = 'v3';
+const APP_VERSION = 'v4';
