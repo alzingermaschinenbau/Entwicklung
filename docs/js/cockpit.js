@@ -1,6 +1,7 @@
 let projekteCache = [], kachelnCache = [], entwicklerCache = [];
 let editingEntryId = null;
 let projektHours = {};
+let _overviewActive = []; // aktuell laufende Einträge (für anteilige Live-Timer)
 
 document.querySelectorAll('.nav .pill[data-page]').forEach((p) => {
   p.addEventListener('click', () => {
@@ -62,6 +63,7 @@ function fillSelects() {
 // ---------- Übersicht ----------
 async function loadOverview() {
   const [stats, active] = await Promise.all([DB.stats(), DB.activeEntries()]);
+  _overviewActive = active;
   document.getElementById('stats').innerHTML = `
     <div class="stat green"><div class="num">${stats.running}</div><div class="lbl">In Arbeit</div></div>
     <div class="stat"><div class="num">${stats.entwickler}</div><div class="lbl">Entwickler</div></div>
@@ -72,14 +74,15 @@ async function loadOverview() {
     el.innerHTML = '<div class="empty">Aktuell wird nichts bearbeitet.</div>';
   } else {
     el.innerHTML = active.map((a) => {
-      const lang = netDuration(a.start_ts, Date.now()) >= LANGLAEUFER_MS;
+      const lang = netDuration(a.start_ts, Date.now()) >= LANGLAEUFER_MS; // echte Laufzeit (Langläufer)
+      const par = a.parallel > 1 ? ` <span class="tag muted">geteilt ÷${a.parallel}</span>` : '';
       return `<div class="list-item${lang ? ' warn' : ''}">
       <div>
         <div style="font-weight:600">${esc(a.projekt_name)} · ${esc(kachelLabel(a.kachel_artikelnummer, a.kachel_name))}</div>
-        <div class="muted" style="font-size:12px">${esc(a.entwickler_name)} · seit ${fmtDateTime(a.start_ts)}${lang ? ' · <span class="tag warn">⚠ läuft sehr lange – vergessen?</span>' : ''}</div>
+        <div class="muted" style="font-size:12px">${esc(a.entwickler_name)} · seit ${fmtDateTime(a.start_ts)}${par}${lang ? ' · <span class="tag warn">⚠ läuft sehr lange – vergessen?</span>' : ''}</div>
       </div>
       <div class="flex">
-        <span class="tag ${lang ? 'warn' : 'live'} timer" data-start="${a.start_ts}">00:00:00</span>
+        <span class="tag ${lang ? 'warn' : 'live'} timer" data-id="${a.id}">${fmtDuration(a.split_ms || 0)}</span>
         <button class="btn stop sm" onclick="stopActive(${a.id})">Beenden</button>
       </div>
     </div>`;
@@ -93,8 +96,9 @@ async function stopActive(id) {
   loadOverview();
 }
 function tickTimers() {
-  document.querySelectorAll('.timer[data-start]').forEach((el) => {
-    el.textContent = fmtDuration(netDuration(Number(el.dataset.start), Date.now()));
+  const split = computeSplit(_overviewActive, Date.now());
+  document.querySelectorAll('.timer[data-id]').forEach((el) => {
+    el.textContent = fmtDuration(split[Number(el.dataset.id)] || 0);
   });
 }
 
@@ -205,12 +209,11 @@ function renderHolidays(filter) {
 // Stunden je Entwickler und Tag: Gestempelt (Ist, netto) vs. Soll-Arbeitszeit.
 function renderHours(rows) {
   const el = document.getElementById('reportHours');
-  const now = Date.now();
   const emps = {};
   for (const e of rows) {
     const start = new Date(e.start_ts);
     const ymd = `${start.getFullYear()}-${start.getMonth()}-${start.getDate()}`;
-    const ist = netDuration(e.start_ts, e.end_ts || now);
+    const ist = e.split_ms || 0;
     const emp = (emps[e.entwickler_id] = emps[e.entwickler_id] || { name: e.entwickler_name, days: {} });
     emp.days[ymd] = (emp.days[ymd] || { ist: 0, date: start });
     emp.days[ymd].ist += ist;
@@ -252,10 +255,9 @@ function renderHours(rows) {
 // Diagramm: je Projekt ein Balkendiagramm der Kacheln (netto, ohne Pausen)
 function renderByProjekt(rows) {
   const el = document.getElementById('reportByProjekt');
-  const now = Date.now();
   const byProjekt = {};
   for (const r of rows) {
-    const ms = netDuration(r.start_ts, r.end_ts || now);
+    const ms = r.split_ms || 0;
     const m = (byProjekt[r.projekt_id] = byProjekt[r.projekt_id] ||
       { name: r.projekt_name, kachel: {}, emp: {}, entries: [] });
     m.kachel[r.kachel_id] = m.kachel[r.kachel_id] ||
@@ -476,7 +478,7 @@ async function loadEntries() {
       <th>Entwickler</th><th>Projekt</th><th>Kachel</th><th>Beginn</th><th>Ende</th><th>Dauer</th><th></th>
     </tr></thead><tbody>` +
     rows.map((r) => {
-      const dur = r.end_ts ? fmtDuration(netDuration(r.start_ts, r.end_ts)) : '<span class="tag live">läuft</span>';
+      const dur = r.end_ts ? fmtDuration(r.split_ms || 0) : '<span class="tag live">läuft</span>';
       return `<tr>
         <td style="font-weight:600">${esc(r.entwickler_name)}</td>
         <td>${esc(r.projekt_name)}</td>
