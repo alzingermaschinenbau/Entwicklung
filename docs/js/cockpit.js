@@ -377,7 +377,7 @@ function printProjektHours(pid) {
       .brandbar{background:#d1071a;color:#fff;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:18px 26px;}
       .brandbar img{height:34px;display:block;}
       .brandbar .tag{font-size:11px;letter-spacing:2px;text-transform:uppercase;opacity:.92;font-weight:600;}
-      .sheet{max-width:900px;margin:0 auto;padding:0 26px 36px;}
+      .sheet{max-width:900px;margin:0 auto;padding:8mm 16mm 16mm;}
       .hd{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;border-bottom:2px solid #d1071a;padding:22px 0 14px;margin-bottom:18px;}
       .hd h1{font-size:23px;margin:0;font-weight:800;}
       .hd .sub{color:#6b7280;font-size:13px;margin-top:5px;}
@@ -404,7 +404,7 @@ function printProjektHours(pid) {
       .mut{color:#6b7280;}
       tr{break-inside:avoid;}
       .foot{margin-top:26px;padding-top:12px;border-top:1px solid #e6e7eb;color:#6b7280;font-size:11px;display:flex;justify-content:space-between;}
-      @media print{@page{margin:12mm;}*{-webkit-print-color-adjust:exact;print-color-adjust:exact;}}
+      @media print{@page{margin:0;}*{-webkit-print-color-adjust:exact;print-color-adjust:exact;}}
     </style></head><body>
       <div class="brandbar"><img src="${logoUrl}" alt="ALZINGER"><span class="tag">Entwicklungs-Zeiterfassung</span></div>
       <div class="sheet">
