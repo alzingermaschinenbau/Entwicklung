@@ -131,4 +131,22 @@ async function stopEntry(id) {
   toast('Arbeit beendet');
 }
 
+// Änderungswunsch absenden (wird in den Settings als Liste gespeichert).
+async function sendFeedback() {
+  const text = (document.getElementById('fbText').value || '').trim();
+  if (!text) return toast('Bitte einen Änderungswunsch schreiben');
+  const author = (document.getElementById('fbName').value || '').trim();
+  try {
+    let list = [];
+    try { list = JSON.parse((await DB.getSetting('feedback')) || '[]'); } catch (e) { list = []; }
+    if (!Array.isArray(list)) list = [];
+    list.push({ text, author, ts: Date.now() });
+    await DB.setSetting('feedback', JSON.stringify(list));
+    document.getElementById('fbText').value = '';
+    toast('Danke! Änderungswunsch gesendet.');
+  } catch (e) {
+    toast('Konnte nicht gesendet werden');
+  }
+}
+
 boot();
