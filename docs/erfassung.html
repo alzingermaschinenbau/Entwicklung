@@ -12,7 +12,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <meta name="apple-mobile-web-app-title" content="Entwicklung" />
-  <link rel="stylesheet" href="css/styles.css?v=1" />
+  <link rel="stylesheet" href="css/styles.css?v=2" />
 </head>
 <body>
   <header class="appbar">
@@ -31,6 +31,7 @@
 
   <div class="nav">
     <button class="pill active" data-page="board">Zeiterfassung</button>
+    <button class="pill" data-page="feedback">Änderungswünsche</button>
     <a class="pill" href="cockpit.html">Cockpit / Auswertung →</a>
   </div>
 
@@ -40,6 +41,16 @@
       <p class="greet-sub">Projekt und Kachel wählen, dann starten. Beim Fertigstellen beenden. Pausen werden automatisch abgezogen.</p>
       <div class="machine-tabs" id="projektTabs"></div>
       <div class="bg-grid" id="kachelGrid"></div>
+    </section>
+
+    <section class="page" id="page-feedback">
+      <h1 class="greet">Änderungswünsche</h1>
+      <p class="greet-sub">Was sollen wir an der App oder am Ablauf verbessern? Schreib es hier rein – die Wünsche erscheinen im Cockpit.</p>
+      <div class="card" style="max-width:640px">
+        <label class="field"><span class="lab">Dein Name (optional)</span><input id="fbName" placeholder="z. B. Max" /></label>
+        <label class="field"><span class="lab">Änderungswunsch</span><textarea id="fbText" rows="5" style="resize:vertical" placeholder="Was soll geändert werden?"></textarea></label>
+        <button class="btn" onclick="sendFeedback()">Senden</button>
+      </div>
     </section>
   </div>
 
@@ -59,11 +70,11 @@
 
   <footer class="app-footer">ALZINGER Entwicklung · <span id="footVer"></span></footer>
 
-  <script src="js/common.js?v=1"></script>
-  <script src="js/store.js?v=1"></script>
+  <script src="js/common.js?v=2"></script>
+  <script src="js/store.js?v=2"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/config.js?v=1"></script>
-  <script src="js/db.js?v=1"></script>
-  <script src="js/erfassung.js?v=1"></script>
+  <script src="js/config.js?v=2"></script>
+  <script src="js/db.js?v=2"></script>
+  <script src="js/erfassung.js?v=2"></script>
 </body>
 </html>

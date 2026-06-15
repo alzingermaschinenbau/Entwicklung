@@ -17,6 +17,7 @@ function onPage(name) {
   if (name === 'entries') loadEntries();
   if (name === 'entwickler') loadEntwickler();
   if (name === 'master') loadMaster();
+  if (name === 'feedback') loadFeedback();
 }
 
 async function boot() {
@@ -615,6 +616,32 @@ async function toggleKachel(id, active) {
   const x = kachelnCache.find((x) => x.id === id);
   await DB.updateKachel(id, x.artikelnummer || '', x.name, active);
   loadMaster();
+}
+
+// ---------- Änderungswünsche ----------
+async function loadFeedback() {
+  const el = document.getElementById('fbList');
+  let list = [];
+  try { list = JSON.parse((await DB.getSetting('feedback')) || '[]'); } catch (e) { list = []; }
+  if (!Array.isArray(list) || !list.length) {
+    el.innerHTML = '<div class="empty">Noch keine Änderungswünsche.</div>';
+    return;
+  }
+  el.innerHTML = list.slice().sort((a, b) => b.ts - a.ts).map((f) => `
+    <div class="list-item">
+      <div>
+        <div style="white-space:pre-wrap">${esc(f.text)}</div>
+        <div class="muted" style="font-size:12px">${f.author ? esc(f.author) + ' · ' : ''}${fmtDateTime(f.ts)}</div>
+      </div>
+      <button class="btn danger sm" onclick="deleteFeedback(${f.ts})">Erledigt</button>
+    </div>`).join('');
+}
+async function deleteFeedback(ts) {
+  let list = [];
+  try { list = JSON.parse((await DB.getSetting('feedback')) || '[]'); } catch (e) { list = []; }
+  list = (Array.isArray(list) ? list : []).filter((x) => x.ts !== ts);
+  await DB.setSetting('feedback', JSON.stringify(list));
+  loadFeedback();
 }
 
 // ---------- Einstellungen ----------

@@ -1,6 +1,8 @@
 # CLAUDE.md – Projekt Entwicklung (Entwicklungszeit-Erfassung)
 
-**Aktuelle Version: v1**
+**Aktuelle Version: v2** (= v1 + „Änderungswünsche": Textfeld in der
+Zeiterfassung, Liste/„Erledigt" im Cockpit; gespeichert in `settings` unter
+`feedback`).
 
 Web-App für Alzinger Maschinenbau: Entwickler wählen am Bildschirm
 **Projekt + Kachel**, stempeln sich auf eine Kachel und beenden die Arbeit beim

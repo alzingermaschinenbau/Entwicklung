@@ -12,7 +12,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <meta name="apple-mobile-web-app-title" content="Entwicklung" />
-  <link rel="stylesheet" href="css/styles.css?v=1" />
+  <link rel="stylesheet" href="css/styles.css?v=2" />
 </head>
 <body>
   <header class="appbar">
@@ -36,6 +36,7 @@
     <button class="pill" data-page="entries">Zeiteinträge</button>
     <button class="pill" data-page="entwickler">Entwickler</button>
     <button class="pill" data-page="master">Projekte &amp; Kacheln</button>
+    <button class="pill" data-page="feedback">Änderungswünsche</button>
     <button class="pill" data-page="settings">Einstellungen</button>
   </div>
 
@@ -128,6 +129,12 @@
       <div class="card"><div id="kachelList"></div></div>
     </section>
 
+    <section class="page" id="page-feedback">
+      <h1 class="greet">Änderungswünsche</h1>
+      <p class="greet-sub">Gemeldete Wünsche aus der Zeiterfassung. „Erledigt" entfernt einen Eintrag.</p>
+      <div class="card"><div id="fbList"></div></div>
+    </section>
+
     <section class="page" id="page-settings">
       <h1 class="greet">Einstellungen</h1>
       <p class="greet-sub">Daten sichern und übertragen.</p>
@@ -165,11 +172,11 @@
 
   <footer class="app-footer">ALZINGER Entwicklung · <span id="footVer"></span></footer>
 
-  <script src="js/common.js?v=1"></script>
-  <script src="js/store.js?v=1"></script>
+  <script src="js/common.js?v=2"></script>
+  <script src="js/store.js?v=2"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/config.js?v=1"></script>
-  <script src="js/db.js?v=1"></script>
-  <script src="js/cockpit.js?v=1"></script>
+  <script src="js/config.js?v=2"></script>
+  <script src="js/db.js?v=2"></script>
+  <script src="js/cockpit.js?v=2"></script>
 </body>
 </html>
