@@ -164,9 +164,15 @@ function printReport() {
   const t = document.getElementById('rTo').value;
   const de = (s) => s ? s.split('-').reverse().join('.') : '…';
   const range = (f || t) ? `Zeitraum: ${de(f)} – ${de(t)}` : 'Gesamter Zeitraum';
+  const logoUrl = new URL('assets/alzinger-logo.png', location.href).href;
   document.querySelector('.print-head').innerHTML =
-    `<div style="font-weight:800;font-size:20px">ALZINGER Entwicklung – Auswertung</div>
-     <div class="muted" style="font-size:13px">${range} · erstellt ${new Date().toLocaleDateString('de-DE')}</div>`;
+    `<div style="display:flex;align-items:flex-end;justify-content:space-between;gap:16px;border-bottom:2px solid #d1071a;padding-bottom:10px">
+       <div>
+         <div style="font-weight:800;font-size:21px">Entwicklung – Auswertung</div>
+         <div class="muted" style="font-size:13px;margin-top:3px">${range} · erstellt ${new Date().toLocaleDateString('de-DE')}</div>
+       </div>
+       <img src="${logoUrl}" alt="ALZINGER" style="height:34px;display:block">
+     </div>`;
   window.print();
 }
 
@@ -357,42 +363,67 @@ function printProjektHours(pid) {
   const entryRows = m.entries.map((x) =>
     `<tr><td>${esc(x.entwickler_name)}</td><td>${esc(x.kachel_label)}</td><td>${fmtDateTime(x.start_ts)}</td><td>${x.running ? 'läuft' : fmtDateTime(x.end_ts)}</td><td class="r b">${fmtHM(x.ms)}</td></tr>`
   ).join('') || '<tr><td colspan="5" class="mut">Keine Buchungen im Zeitraum</td></tr>';
+  const logoUrl = new URL('assets/alzinger-logo-white.png', location.href).href;
+  const erstellt = new Date().toLocaleDateString('de-DE');
+  const anzEntw = m.byEmp.length;
+  const anzBuch = m.entries.length;
   const doc = `<!DOCTYPE html><html lang="de"><head><meta charset="utf-8">
-    <title>${esc(m.name)} – Arbeitszeit</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>${esc(m.name)} – Arbeitszeit · ALZINGER</title>
     <style>
-      * { box-sizing: border-box; }
-      body { margin: 22px; font-family: -apple-system, system-ui, Segoe UI, Arial, sans-serif; color: #1c1d21; }
-      .title { font-weight: 800; font-size: 20px; }
-      .sub { color: #6b7280; font-size: 13px; margin: 2px 0 16px; }
-      .card { border: 1px solid #ccc; border-radius: 10px; padding: 14px; }
-      .head { display: flex; justify-content: space-between; gap: 10px; font-weight: 700; font-size: 16px; margin-bottom: 12px; }
-      .row { display: grid; grid-template-columns: 160px 1fr auto; align-items: center; gap: 10px; padding: 5px 0; }
-      .label { font-size: 13px; font-weight: 600; overflow-wrap: anywhere; }
-      .lauf { background: #d8f3df; color: #138a3e; border-radius: 999px; padding: 2px 8px; font-size: 11px; font-weight: 700; }
-      .track { background: #eef0f3; border-radius: 8px; height: 14px; overflow: hidden; }
-      .fill { height: 100%; background: #138a3e; border-radius: 8px; min-width: 2px; }
-      .val { font-size: 13px; font-weight: 600; white-space: nowrap; font-variant-numeric: tabular-nums; }
-      .empty { color: #6b7280; padding: 8px 0; }
-      h2 { font-size: 14px; margin: 20px 0 6px; }
-      table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
-      th, td { text-align: left; padding: 5px 8px; border-bottom: 1px solid #e5e7eb; vertical-align: top; }
-      th { font-size: 11px; text-transform: uppercase; letter-spacing: .4px; color: #6b7280; }
-      td.r, th.r { text-align: right; }
-      td.b { font-weight: 600; font-variant-numeric: tabular-nums; }
-      .mut { color: #6b7280; }
-      tr { break-inside: avoid; }
-      @media print { @page { margin: 14mm; } }
+      *{box-sizing:border-box;}
+      html,body{margin:0;padding:0;}
+      body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:#1c1d21;background:#fff;-webkit-font-smoothing:antialiased;}
+      .brandbar{background:#d1071a;color:#fff;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:18px 26px;}
+      .brandbar img{height:34px;display:block;}
+      .brandbar .tag{font-size:11px;letter-spacing:2px;text-transform:uppercase;opacity:.92;font-weight:600;}
+      .sheet{max-width:900px;margin:0 auto;padding:0 26px 36px;}
+      .hd{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;border-bottom:2px solid #d1071a;padding:22px 0 14px;margin-bottom:18px;}
+      .hd h1{font-size:23px;margin:0;font-weight:800;}
+      .hd .sub{color:#6b7280;font-size:13px;margin-top:5px;}
+      .stats{display:flex;gap:12px;margin-bottom:22px;}
+      .stat{flex:1;border:1px solid #e6e7eb;border-radius:12px;padding:12px 14px;}
+      .stat .n{font-size:21px;font-weight:800;}
+      .stat.red .n{color:#d1071a;}
+      .stat .l{font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#6b7280;font-weight:700;margin-top:2px;}
+      h2{font-size:12px;letter-spacing:1px;text-transform:uppercase;color:#6b7280;font-weight:700;margin:24px 0 10px;}
+      .card{border:1px solid #e6e7eb;border-radius:12px;padding:16px;}
+      .row{display:grid;grid-template-columns:210px 1fr auto;align-items:center;gap:12px;padding:6px 0;}
+      .label{font-size:13px;font-weight:600;overflow-wrap:anywhere;}
+      .lauf{background:#e7f6ec;color:#16a34a;border-radius:999px;padding:2px 8px;font-size:10px;font-weight:700;}
+      .track{background:#f3f4f6;border-radius:8px;height:16px;overflow:hidden;}
+      .fill{height:100%;background:#d1071a;border-radius:8px;min-width:2px;}
+      .val{font-size:13px;font-weight:700;white-space:nowrap;font-variant-numeric:tabular-nums;}
+      .empty{color:#6b7280;padding:8px 0;}
+      table{width:100%;border-collapse:collapse;font-size:12.5px;}
+      th,td{text-align:left;padding:7px 8px;border-bottom:1px solid #eef0f3;vertical-align:top;}
+      thead th{font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:#6b7280;border-bottom:1.5px solid #e6e7eb;}
+      tbody tr:nth-child(even){background:#fafafa;}
+      td.r,th.r{text-align:right;}
+      td.b{font-weight:700;font-variant-numeric:tabular-nums;}
+      .mut{color:#6b7280;}
+      tr{break-inside:avoid;}
+      .foot{margin-top:26px;padding-top:12px;border-top:1px solid #e6e7eb;color:#6b7280;font-size:11px;display:flex;justify-content:space-between;}
+      @media print{@page{margin:12mm;}*{-webkit-print-color-adjust:exact;print-color-adjust:exact;}}
     </style></head><body>
-      <div class="title">ALZINGER Entwicklung – ${esc(m.name)}</div>
-      <div class="sub">Arbeitszeit je Kachel · ${range} · erstellt ${new Date().toLocaleDateString('de-DE')}</div>
-      <div class="card">
-        <div class="head"><span>${esc(m.name)}</span><span>Gesamt ${fmtHours(m.total)}</span></div>
-        ${rows}
+      <div class="brandbar"><img src="${logoUrl}" alt="ALZINGER"><span class="tag">Entwicklungs-Zeiterfassung</span></div>
+      <div class="sheet">
+        <div class="hd">
+          <div><h1>${esc(m.name)}</h1><div class="sub">Arbeitszeit je Kachel · ${range} · erstellt ${erstellt}</div></div>
+        </div>
+        <div class="stats">
+          <div class="stat red"><div class="n">${fmtHours(m.total)}</div><div class="l">Gesamtzeit</div></div>
+          <div class="stat"><div class="n">${anzEntw}</div><div class="l">Entwickler</div></div>
+          <div class="stat"><div class="n">${anzBuch}</div><div class="l">Buchungen</div></div>
+        </div>
+        <h2>Arbeitszeit je Kachel</h2>
+        <div class="card">${rows}</div>
+        <h2>Zeit je Entwickler</h2>
+        <table><thead><tr><th>Entwickler</th><th class="r">Buchungen</th><th class="r">Summe</th></tr></thead><tbody>${empRows}</tbody></table>
+        <h2>Einzelbuchungen (wer · wann · wieviel)</h2>
+        <table><thead><tr><th>Entwickler</th><th>Kachel</th><th>Beginn</th><th>Ende</th><th class="r">Dauer</th></tr></thead><tbody>${entryRows}</tbody></table>
+        <div class="foot"><span>ALZINGER Maschinenbau · Entwicklungs-Zeiterfassung</span><span>${erstellt}</span></div>
       </div>
-      <h2>Zeit je Entwickler</h2>
-      <table><thead><tr><th>Entwickler</th><th class="r">Buchungen</th><th class="r">Summe</th></tr></thead><tbody>${empRows}</tbody></table>
-      <h2>Einzelbuchungen (wer · wann · wieviel)</h2>
-      <table><thead><tr><th>Entwickler</th><th>Kachel</th><th>Beginn</th><th>Ende</th><th class="r">Dauer</th></tr></thead><tbody>${entryRows}</tbody></table>
       <script>window.onload=function(){window.focus();window.print();};<\/script>
     </body></html>`;
   const w = window.open('', '_blank');
