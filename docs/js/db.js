@@ -45,8 +45,7 @@ const DB = (() => {
   const ENTRY_SELECT = '*, entwickler(name), projekte(name), kacheln(name, artikelnummer)';
 
   function buildReport(rows) {
-    const now = Date.now();
-    const dur = (e) => netDuration(e.start_ts, e.end_ts || now);
+    const dur = (e) => e.split_ms || 0; // anteilig (Pausen abgezogen + parallel aufgeteilt)
     const byKachel = {}, byEmp = {}, breakdown = {};
     let total = 0, running = 0;
     for (const e of rows) {
@@ -149,26 +148,27 @@ const DB = (() => {
   async function activeEntries(projektId) {
     if (!useSupabase) return Store.activeEntries(projektId);
     await autoCloseStale();
-    let q = sb.from('time_entries').select(ENTRY_SELECT).is('end_ts', null).order('start_ts');
-    if (projektId) q = q.eq('projekt_id', projektId);
-    const { data } = await q;
-    return (data || []).map(decorate);
+    // ALLE offenen Einträge laden (über alle Projekte), Split berechnen, dann filtern.
+    const { data } = await sb.from('time_entries').select(ENTRY_SELECT).is('end_ts', null).order('start_ts');
+    const all = (data || []).map(decorate);
+    const split = computeSplit(all, Date.now());
+    const cnt = {};
+    all.forEach((r) => { cnt[r.entwickler_id] = (cnt[r.entwickler_id] || 0) + 1; });
+    all.forEach((r) => { r.split_ms = split[r.id] || 0; r.parallel = cnt[r.entwickler_id]; });
+    return projektId ? all.filter((r) => r.projekt_id === Number(projektId)) : all;
   }
   async function startEntry(entwickler_id, projekt_id, kachel_id) {
     if (!useSupabase) return Store.startEntry(entwickler_id, projekt_id, kachel_id);
-    // Ein Entwickler darf gleichzeitig nur an EINER Kachel eingestempelt sein.
-    const { data: running } = await sb
+    // Paralleles Einstempeln ist erlaubt (Zeit wird gleichmäßig auf die parallel
+    // laufenden Kacheln aufgeteilt). Nur dieselbe Kachel nicht doppelt offen.
+    const { data: dup } = await sb
       .from('time_entries')
-      .select(ENTRY_SELECT)
+      .select('id')
       .eq('entwickler_id', entwickler_id)
+      .eq('kachel_id', kachel_id)
       .is('end_ts', null)
       .limit(1);
-    if (running && running.length) {
-      const r = decorate(running[0]);
-      throw new Error(
-        `Dieser Entwickler ist bereits an „${kachelLabel(r.kachel_artikelnummer, r.kachel_name)}" (${r.projekt_name}) eingestempelt. Bitte zuerst dort beenden.`
-      );
-    }
+    if (dup && dup.length) throw new Error('Diese Kachel läuft für diesen Entwickler bereits.');
     const { error } = await sb.from('time_entries').insert({
       entwickler_id, projekt_id, kachel_id, start_ts: Date.now(), end_ts: null, note: '',
     });
@@ -191,15 +191,20 @@ const DB = (() => {
   async function entries(filter = {}) {
     if (!useSupabase) return Store.entries(filter);
     await autoCloseStale();
+    // Nur nach Datum vorfiltern, Split über den gesamten Bereich berechnen,
+    // DANN nach Projekt/Kachel/Entwickler filtern – so bleibt die Aufteilung korrekt.
     let q = sb.from('time_entries').select(ENTRY_SELECT);
     if (filter.from) q = q.gte('start_ts', filter.from);
     if (filter.to) q = q.lte('start_ts', filter.to);
-    if (filter.projekt_id) q = q.eq('projekt_id', filter.projekt_id);
-    if (filter.kachel_id) q = q.eq('kachel_id', filter.kachel_id);
-    if (filter.entwickler_id) q = q.eq('entwickler_id', filter.entwickler_id);
     q = q.order('start_ts', { ascending: false }).limit(2000);
     const { data } = await q;
-    return (data || []).map(decorate);
+    let rows = (data || []).map(decorate);
+    const split = computeSplit(rows, Date.now());
+    rows.forEach((r) => { r.split_ms = split[r.id] || 0; });
+    if (filter.projekt_id) rows = rows.filter((r) => r.projekt_id === Number(filter.projekt_id));
+    if (filter.kachel_id) rows = rows.filter((r) => r.kachel_id === Number(filter.kachel_id));
+    if (filter.entwickler_id) rows = rows.filter((r) => r.entwickler_id === Number(filter.entwickler_id));
+    return rows;
   }
 
   async function report(filter = {}) {

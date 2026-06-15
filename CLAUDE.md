@@ -1,6 +1,12 @@
 # CLAUDE.md – Projekt Entwicklung (Entwicklungszeit-Erfassung)
 
-**Aktuelle Version: v5** (= v4 + auch die große „Drucken/PDF"-Gesamtauswertung
+**Aktuelle Version: v6** (= v5 + paralleles Einstempeln: ein Entwickler kann an
+mehreren Kacheln gleichzeitig stempeln; überlappende Netto-Zeit wird je
+Entwickler **gleichmäßig aufgeteilt** – `computeSplit` in `common.js`, überall
+über `split_ms` verwendet. Live-Timer in Board/Cockpit zeigen den Anteil; Badge
+`÷N` bei Parallelität).
+
+Vorher: **v5** (= v4 + auch die große „Drucken/PDF"-Gesamtauswertung
 ohne Browser-Kopf/-Fußzeile: `@page{margin:0}` im `@media print` von
 `styles.css`, Innenabstand über `.wrap`/`#printArea`).
 
@@ -55,14 +61,16 @@ NFC-Chip-Stempeln, Webkatalog, Standard-Seed.
 
 ## Stempel-Regeln (verbindlich)
 
-- **Ein Entwickler kann gleichzeitig nur an genau EINER Kachel eingestempelt
-  sein.** Mehrere Entwickler an derselben Kachel sind erlaubt.
-- Will sich ein Entwickler an einer anderen Kachel einstempeln, während er noch
-  eingestempelt ist, **erscheint eine Warnmeldung** (Hinweis, an welcher
-  Kachel/Projekt) und der neue Start wird **abgelehnt**.
-- Umsetzung beim Start (kein offener Eintrag `end_ts IS NULL` desselben
-  Entwicklers): `docs/js/store.js` → `startEntry()` (lokal),
-  `docs/js/db.js` → `startEntry()` (Supabase). Meldung über `toast(e.message)`.
+- **Paralleles Einstempeln ist erlaubt:** Ein Entwickler kann gleichzeitig an
+  mehreren Kacheln/Projekten eingestempelt sein. Mehrere Entwickler an derselben
+  Kachel sind ebenfalls erlaubt.
+- **Nur dieselbe Kachel** kann derselbe Entwickler nicht doppelt offen starten
+  (Warnung, `startEntry()` in `store.js`/`db.js`).
+- **Zeit-Aufteilung:** Überlappende Netto-Zeit eines Entwicklers wird
+  **gleichmäßig** auf die parallel laufenden Buchungen verteilt (`computeSplit`
+  in `common.js`). Dadurch bleibt die Tagessumme je Entwickler real und wird nur
+  auf die Projekte aufgeteilt. Überall wird die anteilige Zeit `split_ms`
+  verwendet (Auswertung, Zeiteinträge, Soll/Ist, Live-Timer).
 
 ## Automatisches Ausstempeln (Feierabend)
 

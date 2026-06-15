@@ -106,6 +106,40 @@ function netDuration(start, end) {
   return Math.max(0, e - start - breakMsInInterval(start, e));
 }
 
+// ---- Parallele Buchungen: Zeit gleichmäßig aufteilen ----
+// Ist ein Entwickler gleichzeitig an mehreren Kacheln eingestempelt, wird die
+// überlappende (Netto-)Zeit gleichmäßig auf die parallelen Buchungen verteilt.
+// Dadurch bleibt die Tagessumme je Entwickler real und wird nur auf die Projekte
+// aufgeteilt. Eingabe: Zeilen mit {id, entwickler_id, start_ts, end_ts}.
+// Rückgabe: { [id]: anteilige Netto-ms }.
+function computeSplit(rows, now) {
+  now = now || Date.now();
+  const out = {};
+  const byEmp = {};
+  for (const r of rows) {
+    out[r.id] = 0;
+    (byEmp[r.entwickler_id] = byEmp[r.entwickler_id] || []).push(r);
+  }
+  for (const emp in byEmp) {
+    const list = byEmp[emp];
+    const pts = new Set();
+    for (const r of list) { pts.add(r.start_ts); pts.add(r.end_ts || now); }
+    const bounds = Array.from(pts).sort((a, b) => a - b);
+    for (let i = 0; i < bounds.length - 1; i++) {
+      const a = bounds[i], b = bounds[i + 1];
+      if (b <= a) continue;
+      const active = list.filter((r) => r.start_ts <= a && (r.end_ts || now) >= b);
+      const k = active.length;
+      if (!k) continue;
+      const net = netDuration(a, b); // Pausen abgezogen
+      if (net <= 0) continue;
+      const share = net / k;
+      for (const r of active) out[r.id] += share;
+    }
+  }
+  return out;
+}
+
 // ---- Automatisches Ausstempeln (Feierabend) ----
 // Wer vergisst zu beenden, wird automatisch um FEIERABEND_HOUR Uhr ausgestempelt.
 const FEIERABEND_HOUR = 17; // 17:00
@@ -182,4 +216,4 @@ function toast(msg) {
 const ALZINGER_LOGO = `<img class="brand-logo" src="assets/alzinger-logo-white.png" alt="ALZINGER" />`;
 
 // App-Version (zentral) – wird im Header und auf der Login-Seite angezeigt
-const APP_VERSION = 'v5';
+const APP_VERSION = 'v6';

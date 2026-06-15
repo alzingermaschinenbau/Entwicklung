@@ -110,23 +110,26 @@ const Store = {
   activeEntries(projektId) {
     this._autoCloseStale();
     const d = this.load();
-    return d.entries
-      .filter((e) => !e.end_ts && (!projektId || e.projekt_id === projektId))
-      .map((e) => this._decorate(e))
+    const now = Date.now();
+    // Split über ALLE offenen Einträge (über alle Projekte), damit parallele
+    // Buchungen korrekt anteilig gezählt werden.
+    const all = d.entries.filter((e) => !e.end_ts).map((e) => this._decorate(e));
+    const split = computeSplit(all, now);
+    const cnt = {};
+    all.forEach((r) => { cnt[r.entwickler_id] = (cnt[r.entwickler_id] || 0) + 1; });
+    all.forEach((r) => { r.split_ms = split[r.id] || 0; r.parallel = cnt[r.entwickler_id]; });
+    return all
+      .filter((e) => !projektId || e.projekt_id === projektId)
       .sort((a, b) => a.start_ts - b.start_ts);
   },
 
   startEntry(entwickler_id, projekt_id, kachel_id) {
     const d = this.load();
-    // Ein Entwickler darf gleichzeitig nur an EINER Kachel eingestempelt sein.
-    const running = d.entries.find((e) => !e.end_ts && e.entwickler_id === entwickler_id);
-    if (running) {
-      const k = d.kacheln.find((b) => b.id === running.kachel_id);
-      const p = d.projekte.find((m) => m.id === running.projekt_id);
-      throw new Error(
-        `Dieser Entwickler ist bereits an „${k ? kachelLabel(k.artikelnummer, k.name) : '?'}" (${p ? p.name : '?'}) eingestempelt. Bitte zuerst dort beenden.`
-      );
-    }
+    // Paralleles Einstempeln ist erlaubt (Zeit wird in der Auswertung gleichmäßig
+    // auf die parallel laufenden Kacheln aufgeteilt). Nur dieselbe Kachel nicht
+    // doppelt offen starten.
+    const dup = d.entries.find((e) => !e.end_ts && e.entwickler_id === entwickler_id && e.kachel_id === kachel_id);
+    if (dup) throw new Error('Diese Kachel läuft für diesen Entwickler bereits.');
     d.entries.push({
       id: this.newId(), entwickler_id, projekt_id, kachel_id,
       start_ts: Date.now(), end_ts: null, note: '',
@@ -167,9 +170,14 @@ const Store = {
   entries(filter = {}) {
     this._autoCloseStale();
     const d = this.load();
+    const now = Date.now();
     let rows = d.entries.map((e) => this._decorate(e));
     if (filter.from) rows = rows.filter((r) => r.start_ts >= filter.from);
     if (filter.to) rows = rows.filter((r) => r.start_ts <= filter.to);
+    // Split über den gesamten Datumsbereich (alle Projekte/Entwickler) berechnen,
+    // DANN nach Projekt/Kachel/Entwickler filtern – so bleibt die Aufteilung korrekt.
+    const split = computeSplit(rows, now);
+    rows.forEach((r) => { r.split_ms = split[r.id] || 0; });
     if (filter.projekt_id) rows = rows.filter((r) => r.projekt_id === filter.projekt_id);
     if (filter.kachel_id) rows = rows.filter((r) => r.kachel_id === filter.kachel_id);
     if (filter.entwickler_id) rows = rows.filter((r) => r.entwickler_id === filter.entwickler_id);
@@ -178,9 +186,8 @@ const Store = {
 
   // ---- Auswertung ----
   report(filter = {}) {
-    const now = Date.now();
-    const rows = this.entries(filter);
-    const dur = (e) => netDuration(e.start_ts, e.end_ts || now); // Pausen automatisch abgezogen
+    const rows = this.entries(filter); // enthält split_ms (Pausen abgezogen + parallel aufgeteilt)
+    const dur = (e) => e.split_ms || 0;
     const byKachel = {}, byEmp = {}, breakdown = {};
     let total = 0, running = 0;
     for (const e of rows) {

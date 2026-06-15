@@ -66,7 +66,9 @@ function kachelnForProjekt(pid) {
 async function renderGrid() {
   const grid = document.getElementById('kachelGrid');
   if (!currentProjekt) { grid.innerHTML = '<div class="empty">Keine Projekte angelegt. Bitte im Cockpit anlegen.</div>'; return; }
-  _active = await DB.activeEntries(currentProjekt);
+  // ALLE offenen Einträge laden (über alle Projekte), damit parallele Buchungen
+  // korrekt anteilig gezählt werden; für die Anzeige nach Projekt filtern.
+  _active = await DB.activeEntries();
   const list = kachelnForProjekt(currentProjekt);
   if (!list.length) { grid.innerHTML = '<div class="empty">Für dieses Projekt sind noch keine Kacheln angelegt.</div>'; return; }
   grid.innerHTML = list
@@ -74,9 +76,9 @@ async function renderGrid() {
       const running = _active.filter((a) => a.kachel_id === b.id);
       const workers = running
         .map((r) => `<div class="worker-row">
-             <span class="wname">${esc(r.entwickler_name)}</span>
+             <span class="wname">${esc(r.entwickler_name)}${r.parallel > 1 ? ` <span class="tag muted">÷${r.parallel}</span>` : ''}</span>
              <span class="flex">
-               <span class="wtime timer" data-start="${r.start_ts}">00:00:00</span>
+               <span class="wtime timer" data-id="${r.id}">${fmtDuration(r.split_ms || 0)}</span>
                <button class="btn stop sm" onclick="stopEntry(${r.id})">Beenden</button>
              </span>
            </div>`)
@@ -95,8 +97,9 @@ async function renderGrid() {
 }
 
 function tick() {
-  document.querySelectorAll('.timer[data-start]').forEach((el) => {
-    el.textContent = fmtDuration(netDuration(Number(el.dataset.start), Date.now()));
+  const split = computeSplit(_active, Date.now());
+  document.querySelectorAll('.timer[data-id]').forEach((el) => {
+    el.textContent = fmtDuration(split[Number(el.dataset.id)] || 0);
   });
 }
 
