@@ -1,6 +1,10 @@
 # CLAUDE.md – Projekt Entwicklung (Entwicklungszeit-Erfassung)
 
-**Aktuelle Version: v4** (= v3 + PDF je Projekt ohne Browser-Kopf/-Fußzeile:
+**Aktuelle Version: v5** (= v4 + auch die große „Drucken/PDF"-Gesamtauswertung
+ohne Browser-Kopf/-Fußzeile: `@page{margin:0}` im `@media print` von
+`styles.css`, Innenabstand über `.wrap`/`#printArea`).
+
+Vorher: **v4** (= v3 + PDF je Projekt ohne Browser-Kopf/-Fußzeile:
 `@page{margin:0}` im Druck-Dokument, eigener Innenabstand über `.sheet`).
 
 Vorher: **v3** (= v2 + überarbeitetes PDF/Druck-Layout: ALZINGER-Briefkopf in
