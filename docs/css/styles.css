@@ -50,7 +50,7 @@ button { font-family: inherit; cursor: pointer; }
   background: var(--red);
   color: #fff;
   /* roten Header bis ganz nach oben unter die Statusleiste ziehen */
-  padding: calc(env(safe-area-inset-top, 0px) + 25px) 22px 25px;
+  padding: calc(env(safe-area-inset-top, 0px) + 36px) 22px 36px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -58,7 +58,7 @@ button { font-family: inherit; cursor: pointer; }
 }
 .brand { display: flex; align-items: center; gap: 14px; }
 .brand .brand-logo {
-  height: 44px;
+  height: 52px;
   display: block;
 }
 .brand .titles { line-height: 1.1; padding-left: 14px; border-left: 1px solid rgba(255, 255, 255, 0.4); }
@@ -376,10 +376,10 @@ tr:last-child td { border-bottom: none; }
 .mdetail table { font-size: 12.5px; }
 
 @media (max-width: 600px) {
-  .appbar { padding: calc(env(safe-area-inset-top, 0px) + 18px) 14px 18px; }
+  .appbar { padding: calc(env(safe-area-inset-top, 0px) + 28px) 14px 28px; }
   .appbar .who { display: none; }
   .appbar .ver { display: none; }
-  .brand .brand-logo { height: 38px; }
+  .brand .brand-logo { height: 46px; }
   .brand .titles { padding-left: 10px; }
   h1.greet { font-size: 22px; }
 
