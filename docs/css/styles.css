@@ -33,6 +33,16 @@ html, body {
   overflow-x: hidden;
   overscroll-behavior-x: none;
 }
+/* Statusleisten-/Safe-Area-Bereich oben durchgehend rot (kein heller Streifen) */
+html { background: var(--red); }
+body::before {
+  content: "";
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  height: env(safe-area-inset-top, 0px);
+  background: var(--red);
+  z-index: 90;
+}
 a { color: inherit; }
 button { font-family: inherit; cursor: pointer; }
 
