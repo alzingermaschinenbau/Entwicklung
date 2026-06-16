@@ -34,7 +34,6 @@ html, body {
   overscroll-behavior-x: none;
 }
 /* Statusleisten-/Safe-Area-Bereich oben durchgehend rot (kein heller Streifen) */
-html { background: var(--red); }
 body::before {
   content: "";
   position: fixed;
