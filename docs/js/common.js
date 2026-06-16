@@ -110,13 +110,25 @@ function netDuration(start, end) {
 // Ist ein Entwickler gleichzeitig an mehreren Kacheln eingestempelt, wird die
 // überlappende (Netto-)Zeit gleichmäßig auf die parallelen Buchungen verteilt.
 // Dadurch bleibt die Tagessumme je Entwickler real und wird nur auf die Projekte
-// aufgeteilt. Eingabe: Zeilen mit {id, entwickler_id, start_ts, end_ts}.
+// aufgeteilt. Eingabe: Zeilen mit {id, entwickler_id, start_ts, end_ts, note}.
 // Rückgabe: { [id]: anteilige Netto-ms }.
+//
+// Ausnahme: importierte Aggregat-/Altdaten (Notiz beginnt mit „Import 2026")
+// zählen mit VOLLER Dauer – sie wurden mit synthetischen, gleichen Startzeiten
+// angelegt und dürfen nicht als „parallel" geteilt werden. Nur echtes, live
+// paralleles Stempeln wird aufgeteilt.
+function isSplitExempt(r) {
+  return typeof r.note === 'string' && r.note.indexOf('Import 2026') === 0;
+}
 function computeSplit(rows, now) {
   now = now || Date.now();
   const out = {};
   const byEmp = {};
   for (const r of rows) {
+    if (isSplitExempt(r)) {
+      out[r.id] = netDuration(r.start_ts, r.end_ts || now); // volle Dauer
+      continue;
+    }
     out[r.id] = 0;
     (byEmp[r.entwickler_id] = byEmp[r.entwickler_id] || []).push(r);
   }
@@ -216,4 +228,4 @@ function toast(msg) {
 const ALZINGER_LOGO = `<img class="brand-logo" src="assets/alzinger-logo-white.png" alt="ALZINGER" />`;
 
 // App-Version (zentral) – wird im Header und auf der Login-Seite angezeigt
-const APP_VERSION = 'v6';
+const APP_VERSION = 'v7';
