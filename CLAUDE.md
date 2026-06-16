@@ -1,6 +1,13 @@
 # CLAUDE.md – Projekt Entwicklung (Entwicklungszeit-Erfassung)
 
-**Aktuelle Version: v6** (= v5 + paralleles Einstempeln: ein Entwickler kann an
+**Aktuelle Version: v9** (= v8 + Layout-Feinschliff: roter Header bis unter die
+Statusleiste/Safe-Area gezogen (`env(safe-area-inset-top)` an `.appbar`,
+`viewport-fit=cover`, Statusleiste `black-translucent`); horizontales
+Verschieben/Wackeln gesperrt (`overflow-x:hidden`/`overscroll-behavior-x:none`
+an `html,body`). v7 = Import-Stunden von Aufteilung ausgenommen; v8 = App-Symbol
+Anthrazit/Weiß.)
+
+Vorher: **v6** (= v5 + paralleles Einstempeln: ein Entwickler kann an
 mehreren Kacheln gleichzeitig stempeln; überlappende Netto-Zeit wird je
 Entwickler **gleichmäßig aufgeteilt** – `computeSplit` in `common.js`, überall
 über `split_ms` verwendet. Live-Timer in Board/Cockpit zeigen den Anteil; Badge
