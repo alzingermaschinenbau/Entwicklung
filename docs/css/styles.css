@@ -50,24 +50,26 @@ button { font-family: inherit; cursor: pointer; }
   background: var(--red);
   color: #fff;
   /* roten Header bis ganz nach oben unter die Statusleiste ziehen */
-  padding: calc(env(safe-area-inset-top, 0px) + 36px) 22px 36px;
+  padding: calc(env(safe-area-inset-top, 0px) + 30px) 22px 16px;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+  box-shadow: none;
 }
-.brand { display: flex; align-items: center; gap: 14px; }
+.brand { display: flex; flex-direction: column; align-items: flex-start; gap: 9px; min-width: 0; }
 .brand .brand-logo {
-  height: 52px;
+  height: 50px;
   display: block;
+  padding-bottom: 10px;
+  border-bottom: 1.6px solid rgba(255, 255, 255, 0.9);
 }
-.brand .titles { line-height: 1.1; padding-left: 14px; border-left: 1px solid rgba(255, 255, 255, 0.4); }
+.brand .titles { line-height: 1.1; }
 .brand .titles .sub {
-  font-size: 12px;
-  letter-spacing: 2px;
+  font-size: 12.5px;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
-  opacity: 0.92;
-  font-weight: 600;
+  opacity: 0.97;
+  font-weight: 700;
 }
 .appbar .right { display: flex; align-items: center; gap: 14px; }
 .appbar .who { font-size: 13px; opacity: 0.9; }
@@ -85,21 +87,26 @@ button { font-family: inherit; cursor: pointer; }
 }
 .btn-ghost-light:hover { background: rgba(255, 255, 255, 0.26); }
 
-/* ---------- Nav pills ---------- */
+/* ---------- Nav pills (im roten Header, CRM-Stil) ---------- */
 .nav {
   display: flex;
-  gap: 10px;
-  padding: 16px 22px 0;
-  flex-wrap: wrap;
-  max-width: 1200px;
-  margin: 0 auto;
+  gap: 9px;
+  padding: 0 16px 16px;
+  margin: 0;
   width: 100%;
+  max-width: none;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  scrollbar-width: none;
+  background: var(--red);
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.10);
 }
+.nav::-webkit-scrollbar { display: none; }
 .nav .pill {
-  background: var(--card);
-  border: 1px solid var(--border);
-  color: var(--text);
-  padding: 9px 18px;
+  background: rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.30);
+  color: #fff;
+  padding: 9px 16px;
   border-radius: 999px;
   font-size: 14px;
   font-weight: 600;
@@ -108,13 +115,16 @@ button { font-family: inherit; cursor: pointer; }
   gap: 7px;
   text-decoration: none;
   cursor: pointer;
+  white-space: nowrap;
+  flex: none;
 }
 .nav .pill.active {
-  background: var(--red);
-  color: #fff;
-  border-color: var(--red);
+  background: #fff;
+  color: var(--red);
+  border-color: #fff;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18);
 }
-.nav .pill:hover:not(.active) { border-color: #d2d4da; }
+.nav .pill:hover:not(.active) { background: rgba(255, 255, 255, 0.24); border-color: rgba(255, 255, 255, 0.45); }
 
 /* ---------- Layout ---------- */
 .wrap { max-width: 1200px; margin: 0 auto; padding: 22px; width: 100%; }
@@ -376,11 +386,11 @@ tr:last-child td { border-bottom: none; }
 .mdetail table { font-size: 12.5px; }
 
 @media (max-width: 600px) {
-  .appbar { padding: calc(env(safe-area-inset-top, 0px) + 28px) 14px 28px; }
+  .appbar { padding: calc(env(safe-area-inset-top, 0px) + 22px) 14px 14px; }
   .appbar .who { display: none; }
   .appbar .ver { display: none; }
-  .brand .brand-logo { height: 46px; }
-  .brand .titles { padding-left: 10px; }
+  .brand .brand-logo { height: 44px; }
+  .brand .titles { padding-left: 0; }
   h1.greet { font-size: 22px; }
 
   /* Stat-Kacheln gleichmäßig 3 nebeneinander */
